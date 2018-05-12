@@ -8,36 +8,29 @@ It should open a browser window and stream seismic data to a plot.
 import time
 import pandas as pd
 import holoviews as hv
-from bokeh.io import curdoc
-from bokeh.layouts import layout
+#from bokeh.layouts import layout
 from threading import Thread
 from tornado import gen
 from functools import partial
+from obspy.clients.seedlink.easyseedlink import create_client
 
 renderer = hv.renderer('bokeh')
+blank_data = pd.DataFrame({'counts': [], 'timestamp':[]})
+seis_stream = hv.streams.Buffer(blank_data, index=False)
 
-
-# Set up StreamingDataFrame and add async callback
-blank_data = pd.DataFrame({'counts': []})
-seis_stream = hv.streams.Buffer(blank_data, length=100, index=False)
+# Create a curve element with all options except for data
+curve = partial(hv.Curve, kdims='timestamp', vdims='counts')
 
 # Define DynamicMaps and display plot
-
-seis_dmap = hv.DynamicMap(hv.Curve, streams=[seis_stream])
-plot = renderer.get_plot(seis_dmap)
-
-#doc = hv.renderer('bokeh').server_doc(seis_dmap)
-doc = curdoc()
-doc.add_root(layout([plot.state]))
-
-from obspy.clients.seedlink.easyseedlink import create_client
+seis_dmap = hv.DynamicMap(curve, streams=[seis_stream])
+doc = renderer.server_doc(seis_dmap)
 
 @gen.coroutine
 def update(data):
     seis_stream.send(data)
 
 def handle_trace(trace):
-    data = pd.DataFrame({'counts': trace.data})
+    data = pd.DataFrame({'timestamp': trace.times('matplotlib'), 'counts': trace.data})
     print(trace)
     time.sleep(1)
     doc.add_next_tick_callback(partial(update, data=data))
