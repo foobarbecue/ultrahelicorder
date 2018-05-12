@@ -15,7 +15,7 @@ from functools import partial
 from obspy.clients.seedlink.easyseedlink import create_client
 
 renderer = hv.renderer('bokeh')
-blank_data = pd.DataFrame({'counts': [], 'timestamp':[]})
+blank_data = pd.DataFrame({'counts': [0], 'timestamp':[pd.datetime.now()]})
 seis_stream = hv.streams.Buffer(blank_data, index=False)
 
 # Create a curve element with all options except for data
@@ -30,7 +30,11 @@ def update(data):
     seis_stream.send(data)
 
 def handle_trace(trace):
-    data = pd.DataFrame({'timestamp': trace.times('matplotlib'), 'counts': trace.data})
+    # Have obspy give the times in POSIX format and convert using pandas' to_datetime. Couldn't find a way to use obspy
+    # UTCDateTime directly.
+    times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s')
+
+    data = pd.DataFrame({'timestamp': times, 'counts': trace.data})
     print(trace)
     time.sleep(1)
     doc.add_next_tick_callback(partial(update, data=data))
