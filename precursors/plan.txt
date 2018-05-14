@@ -1,2 +1,2 @@
 slurp.py : uses easyseedlink to pull data into a local timeseries db
-disp.py : a bokeh holoviews app that looks a bit like Guralp Scream in the browser
+serve.py : a bokeh holoviews app that looks a bit like Guralp Scream in the browser
