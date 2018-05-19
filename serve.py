@@ -1,18 +1,66 @@
 from bokeh.server.server import Server
 import slurp
 from bokeh.layouts import layout
-from bokeh.models.callbacks import CustomJS
-#from bokeh.plotting import curdoc
 import holoviews as hv
-from functools import partial
 import pandas as pd
 import pytz
+from jinja2 import Template
+# Template and javascript ignominiously pasted from scroller.js until I figure out a multi-file framework
+template = Template("""
+</html>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.15.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.js"></script>
+<script src="http://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.js"></script>
+<script>
+function waitForAddedNode(params) {
+    new MutationObserver(function(mutations) {
+        var el = document.getElementsByClassName(params.class).length;
+        if (el) {
+            console.log(el)
+            this.disconnect();
+            params.done(el);
+        }
+    }).observe(params.parent || document, {
+        subtree: !!params.recursive,
+        childList: true,
+    });
+}
 
+waitForAddedNode({
+    class: "bk-canvas",
+    done: onload,
+    recursive: true,
+    parent: document.body
+});
+
+function onload(){
+    function findFigure(){
+        for (obj in Bokeh.documents[0]._all_models) {
+            if (Bokeh.documents[0]._all_models[obj]._subtype == "Figure"){
+                return Bokeh.documents[0]._all_models[obj]
+            }
+        }
+    }
+
+    fig = findFigure();
+    x_time_extent = 1000000; // Should be argument?
+    function setTimeRange() {
+        var now = Date.now();
+        fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
+        console.log('setting interval')
+    }
+    setInterval(setTimeRange,100)
+}
+
+</script>
+{{ plot_script }}
+<body>
+{{ plot_div }}
+<body> 
+</html>
+""")
 
 renderer = hv.renderer('bokeh')
-
-# need to add some CustomJS that runs
-# Bokeh.document[0].correct_model.x_range.setv({"start": a_while_ago, "end": a_while_inthefuture})
 
 def make_document(doc):
     # Create a curve element with all options except for data
@@ -23,19 +71,13 @@ def make_document(doc):
         return curve
     seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream])
     seis_dmap = seis_dmap.options({'Curve': {'width': 1200}})
-    #seis_dmap = seis_dmap.redim.range(timestamp=(0,10000))
-    #seis_dmap = seis_dmap.opts({'norm':{'framewise':'True'}})
-    seis_dmap.redim.range(timestamp=(1426366659275,1526366659275))
+
+    now = pd.datetime.now()
+    initial_x_extent = pd.Timedelta('1s')
+    seis_dmap.redim.range(timestamp=(now - initial_x_extent, now + initial_x_extent))
     plot = renderer.get_plot(seis_dmap)
-    print(plot.id)
-
-    def set_x_range():
-        print('setting xrange')
-        now = pd.datetime.now()
-        time_extent = pd.Timedelta('1s')
-        plot.x_range = (now - time_extent, now + time_extent)
-
     doc.add_root(layout([plot.state]))
+    doc.template = template
     doc.seis_stream = seis_stream
      # this only happens once
     slurp.session_list.append(doc)
