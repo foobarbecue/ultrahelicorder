@@ -21,8 +21,8 @@ def update(data, doc):
 def handle_trace(trace):
     # Have obspy give the times in POSIX format and convert using pandas' to_datetime. Couldn't find a way to use obspy
     # UTCDateTime directly.
-    times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s', utc=True).astype(int)
-    data = pd.DataFrame({'timestamp': times, 'counts': trace.data})
+    times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s', utc=True)
+    data = pd.DataFrame({'timestamp': times, 'counts': trace.data, 'channel': trace.id})
 
     for doc in session_list:
         doc.add_next_tick_callback(partial(update, data=data, doc=doc))
@@ -33,12 +33,14 @@ def obspy_worker(network='HV'):
     station_xml = client.get_info('STREAMS') # should be async
     station_xml = ET.fromstring(station_xml)
     stations = station_xml.findall("./*/[@network='{}']".format(network))
-    for station in stations:
+    for station in stations[0:3]:
         station_name = station.attrib['name']
         channels = station.getchildren()
         for channel in channels:
             channel_name = channel.attrib['seedname']
-            client.select_stream(network, station_name, channel_name)
+    #        client.select_stream(network, station_name, channel_name)
+    client.select_stream('HV','WOOD','EHZ')
+    client.select_stream('HV','WOOD','EHN')
     client.run()
 
 obspy_thread = Thread(target=obspy_worker)

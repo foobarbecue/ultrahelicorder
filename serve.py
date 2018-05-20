@@ -48,8 +48,8 @@ function onload(){
         var now = Date.now();
         fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
     }
-    fig.y_range.setv({'start':-5000, 'end':5000})
-    setInterval(setTimeRange,100)
+    fig.y_range.setv({'start':-500000, 'end':500000})
+    //setInterval(setTimeRange,100)
 }
 
 </script>
@@ -65,24 +65,30 @@ renderer = hv.renderer('bokeh')
 
 def make_document(doc):
     # Create a curve element with all options except for data
-    blank_data = pd.DataFrame({'counts': [None], 'timestamp': [pd.datetime.now(tz=pytz.utc)]})
+    blank_data = pd.DataFrame({'counts': [0]*2,
+                               'timestamp': [pd.datetime.now(tz=pytz.utc)]*2,
+                               'channel': ['HV.WOOD..EHZ','HV.WOOD..EHN']})
     seis_stream = hv.streams.Buffer(blank_data, index=False, length=100000)
 
-    def plot_seis(data):
-        curve = hv.Curve(data=data, kdims='timestamp', vdims='counts', label='HV.WOOD.EHZ')
+    def plot_seis(data, channel):
+        curve = hv.Curve(data=data[data.channel == channel],
+                         kdims=['timestamp'], vdims='counts', label='HV.WOOD.EHZ')
         return curve
-    seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream])
-    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': False}})
-    plot = renderer.get_plot(seis_dmap)
-    doc.add_root(layout([plot.state]))
-    doc.template = template
+    seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream], kdims=hv.Dimension('channel',
+                        values=['HV.WOOD..EHZ','HV.WOOD..EHN']))
+    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': True}})
+    # layout = seis_dmap
+    layout = seis_dmap.layout(['channel']).cols(1)
     doc.seis_stream = seis_stream
     # Add this user to the list of sessions to generate new data callbacks in slurp.py
     slurp.session_list.append(doc)
+    doc_root = renderer.get_plot(layout).state
+    doc.template = template
+    doc.add_root(doc_root)
     return doc
 
 
-server = Server(make_document, port=5008)
+server = Server(make_document, port=81, host='0.0.0.0', allow_websocket_origin=["*"])
 server.start()
 
 if __name__ == '__main__':
