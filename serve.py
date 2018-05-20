@@ -47,8 +47,8 @@ function onload(){
     function setTimeRange() {
         var now = Date.now();
         fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
-        console.log('setting interval')
     }
+    fig.y_range.setv({'start':-5000, 'end':5000})
     setInterval(setTimeRange,100)
 }
 
@@ -62,24 +62,22 @@ function onload(){
 
 renderer = hv.renderer('bokeh')
 
+
 def make_document(doc):
     # Create a curve element with all options except for data
     blank_data = pd.DataFrame({'counts': [None], 'timestamp': [pd.datetime.now(tz=pytz.utc)]})
     seis_stream = hv.streams.Buffer(blank_data, index=False, length=100000)
+
     def plot_seis(data):
         curve = hv.Curve(data=data, kdims='timestamp', vdims='counts', label='HV.WOOD.EHZ')
         return curve
     seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream])
-    seis_dmap = seis_dmap.options({'Curve': {'width': 1200}})
-
-    now = pd.datetime.now()
-    initial_x_extent = pd.Timedelta('1s')
-    seis_dmap.redim.range(timestamp=(now - initial_x_extent, now + initial_x_extent))
+    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': False}})
     plot = renderer.get_plot(seis_dmap)
     doc.add_root(layout([plot.state]))
     doc.template = template
     doc.seis_stream = seis_stream
-     # this only happens once
+    # Add this user to the list of sessions to generate new data callbacks in slurp.py
     slurp.session_list.append(doc)
     return doc
 
