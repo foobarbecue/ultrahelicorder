@@ -5,26 +5,14 @@ It should open a browser window and stream seismic data to a plot.
 
 """
 
-import time
 import pandas as pd
-import holoviews as hv
-#from bokeh.layouts import layout
 from threading import Thread
 from tornado import gen
 from functools import partial
 from obspy.clients.seedlink.easyseedlink import create_client
-import pytz
+import xml.etree.ElementTree as ET
 
 session_list = []
-
-# Define DynamicMaps and display plot
-
-#now = pd.datetime.now()
-#time_extent = pd.Timedelta('1 hour')
-
-#seis_dmap.redim.range(timestamp=(now - time_extent, now + time_extent))
-
-#doc = renderer.server_doc(seis_dmap)
 
 @gen.coroutine
 def update(data, doc):
@@ -33,16 +21,24 @@ def update(data, doc):
 def handle_trace(trace):
     # Have obspy give the times in POSIX format and convert using pandas' to_datetime. Couldn't find a way to use obspy
     # UTCDateTime directly.
-    times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s', utc=True)
+    times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s', utc=True).astype(int)
     data = pd.DataFrame({'timestamp': times, 'counts': trace.data})
 
     for doc in session_list:
         doc.add_next_tick_callback(partial(update, data=data, doc=doc))
     print(trace)
 
-def obspy_worker():
+def obspy_worker(network='HV'):
     client = create_client('rtserve.iris.washington.edu', on_data=handle_trace)
-    client.select_stream('HV', 'WOOD', '???')
+    station_xml = client.get_info('STREAMS') # should be async
+    station_xml = ET.fromstring(station_xml)
+    stations = station_xml.findall("./*/[@network='{}']".format(network))
+    for station in stations:
+        station_name = station.attrib['name']
+        channels = station.getchildren()
+        for channel in channels:
+            channel_name = channel.attrib['seedname']
+            client.select_stream(network, station_name, channel_name)
     client.run()
 
 obspy_thread = Thread(target=obspy_worker)
