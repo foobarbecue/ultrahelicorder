@@ -33,7 +33,6 @@ function onload(){
         var now = Date.now();
         fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
     }
+    fig.y_range.setv({'start':-5000, 'end':5000})
     setInterval(setTimeRange,100)
 }
-
-

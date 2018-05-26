@@ -7,10 +7,9 @@ import pytz
 from jinja2 import Template
 # Template and javascript ignominiously pasted from scroller.js until I figure out a multi-file framework
 template = Template("""
-</html>
-<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.15.js"></script>
-<script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.15.js"></script>
-<script src="http://cdn.pydata.org/bokeh/release/bokeh-tables-0.12.15.js"></script>
+<html>
+{{ bokeh_css }}
+{{ bokeh_js }}
 <script>
 function waitForAddedNode(params) {
     new MutationObserver(function(mutations) {
@@ -49,14 +48,14 @@ function onload(){
         fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
     }
     fig.y_range.setv({'start':-500000, 'end':500000})
-    //setInterval(setTimeRange,100)
+    setInterval(setTimeRange,100)
 }
 
 </script>
 {{ plot_script }}
 <body>
 {{ plot_div }}
-<body> 
+</body> 
 </html>
 """)
 
@@ -64,19 +63,19 @@ renderer = hv.renderer('bokeh')
 
 
 def make_document(doc):
-    # Create a curve element with all options except for data
     blank_data = pd.DataFrame({'counts': [0]*2,
                                'timestamp': [pd.datetime.now(tz=pytz.utc)]*2,
-                               'channel': ['HV.WOOD..EHZ','HV.WOOD..EHN']})
-    seis_stream = hv.streams.Buffer(blank_data, index=False, length=100000)
+                               'channel': ['HV.ALEP..EHE','HV.WOOD..EHN']})
+    seis_stream = hv.streams.Buffer(blank_data, index=False, length=1000000)
 
     def plot_seis(data, channel):
         curve = hv.Curve(data=data[data.channel == channel],
-                         kdims=['timestamp'], vdims='counts', label='HV.WOOD.EHZ')
+                         kdims=['timestamp'], vdims='counts')
         return curve
-    seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream], kdims=hv.Dimension('channel',
-                        values=['HV.WOOD..EHZ','HV.WOOD..EHN']))
-    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': True}})
+    # Triggers https://github.com/ioam/holoviews/issues/2705
+    seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream], kdims=[hv.Dimension('channel',
+                        values=['HV.ALEP..EHZ','HV.ALEP..EHN'])])
+    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': False}})
     # layout = seis_dmap
     layout = seis_dmap.layout(['channel']).cols(1)
     doc.seis_stream = seis_stream
