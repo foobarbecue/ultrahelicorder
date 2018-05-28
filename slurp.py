@@ -39,8 +39,6 @@ def obspy_worker(network='HV'):
         for channel in channels:
             channel_name = channel.attrib['seedname']
             client.select_stream(network, station_name, channel_name)
-    #client.select_stream('HV','WOOD','EHZ')
-    #client.select_stream('HV','WOOD','EHN')
     client.run()
 
 obspy_thread = Thread(target=obspy_worker)

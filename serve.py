@@ -1,8 +1,10 @@
 from bokeh.server.server import Server
 import slurp
 from bokeh.layouts import layout
+from bokeh.settings import settings
 import holoviews as hv
 import pandas as pd
+import numpy as np
 import pytz
 from jinja2 import Template
 # Template and javascript ignominiously pasted from scroller.js until I figure out a multi-file framework
@@ -21,7 +23,7 @@ function waitForAddedNode(params) {
         }
     }).observe(params.parent || document, {
         subtree: !!params.recursive,
-        childList: true,
+        childList: true
     });
 }
 
@@ -34,20 +36,26 @@ waitForAddedNode({
 
 function onload(){
     function findFigure(){
+        var figs = [];
         for (obj in Bokeh.documents[0]._all_models) {
-            if (Bokeh.documents[0]._all_models[obj]._subtype == "Figure"){
-                return Bokeh.documents[0]._all_models[obj]
+            if (Bokeh.documents[0]._all_models[obj].type == "Plot"){
+                figs.push(Bokeh.documents[0]._all_models[obj]);
             }
         }
+        return figs
     }
 
-    fig = findFigure();
-    x_time_extent = 1000000; // Should be argument?
+    figs = findFigure();
+    x_time_extent = 500000; // Should be argument?
+    time_delay = 50000;
     function setTimeRange() {
         var now = Date.now();
-        fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()});
+        for (fig_ind in figs){
+            var fig = figs[fig_ind];
+            fig.x_range.setv({'start': now - x_time_extent, 'end':Date.now()-time_delay});
+            //fig.y_range.setv({'start':-100000, 'end':100000});
+        }
     }
-    fig.y_range.setv({'start':-500000, 'end':500000})
     setInterval(setTimeRange,100)
 }
 
@@ -63,9 +71,16 @@ renderer = hv.renderer('bokeh')
 
 
 def make_document(doc):
-    blank_data = pd.DataFrame({'counts': [0]*2,
-                               'timestamp': [pd.datetime.now(tz=pytz.utc)]*2,
-                               'channel': ['HV.ALEP..EHE','HV.WOOD..EHN']})
+    blank_data = pd.DataFrame({'counts': [0]*4,
+                               'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
+                               'channel': ['HV.ALEP..EHE',
+                                           'HV.ALEP..EHN',
+                                           'HV.AHUD..EHE',
+                                           'HV.AHUD..EHN',]})
+    # blank_data = pd.DataFrame({'channel':[],'counts':[],'timestamp':[]},
+    #                           columns=['channel','counts','timestamp'])
+    blank_data.astype({'counts': 'int16','timestamp': 'datetime64[ns]', 'channel':str})
+    # blank_data.set_index('timestamp', inplace=True)
     seis_stream = hv.streams.Buffer(blank_data, index=False, length=1000000)
 
     def plot_seis(data, channel):
@@ -74,10 +89,14 @@ def make_document(doc):
         return curve
     # Triggers https://github.com/ioam/holoviews/issues/2705
     seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream], kdims=[hv.Dimension('channel',
-                        values=['HV.ALEP..EHZ','HV.ALEP..EHN'])])
-    seis_dmap = seis_dmap.options({'Curve': {'width': 1200, 'apply_ranges': False}})
+                                    values=['HV.ALEP..EHE',
+                                           'HV.ALEP..EHN',
+                                           'HV.AHUD..EHE',
+                                           'HV.AHUD..EHN'])])
+    seis_dmap = seis_dmap.options({'Curve': {'apply_xrange': False, 'apply_yrange': True,
+                                             'width': 1200, 'shared_axes':False}})
     # layout = seis_dmap
-    layout = seis_dmap.layout(['channel']).cols(1)
+    layout = seis_dmap.layout(['channel']).options().cols(1)
     doc.seis_stream = seis_stream
     # Add this user to the list of sessions to generate new data callbacks in slurp.py
     slurp.session_list.append(doc)
