@@ -1,3 +1,4 @@
+import bokeh
 from bokeh.server.server import Server
 import slurp
 from bokeh.layouts import layout
@@ -71,15 +72,15 @@ renderer = hv.renderer('bokeh')
 
 
 def make_document(doc):
-    blank_data = pd.DataFrame({'counts': [0]*4,
-                               'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
+    blank_data = pd.DataFrame({'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
+                               'counts': [0.0]*4,
                                'channel': ['HV.ALEP..EHE',
                                            'HV.ALEP..EHN',
                                            'HV.AHUD..EHE',
                                            'HV.AHUD..EHN',]})
     # blank_data = pd.DataFrame({'channel':[],'counts':[],'timestamp':[]},
     #                           columns=['channel','counts','timestamp'])
-    blank_data.astype({'counts': 'int16','timestamp': 'datetime64[ns]', 'channel':str})
+    # blank_data.astype({'counts': 'float64','timestamp': 'datetime64[ns]', 'channel':str})
     # blank_data.set_index('timestamp', inplace=True)
     seis_stream = hv.streams.Buffer(blank_data, index=False, length=1000000)
 

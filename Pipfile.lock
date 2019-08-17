@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e50c5f0d31d3906845b3fe692f173fc4c79eaf85fc71f67eff765af749fbdfec"
+            "sha256": "18ead9d5c1b753802b73e0fc108e5ef01e39000d70bb9bb0fc1cf154fdf01e48"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -79,9 +79,9 @@
             ],
             "version": "==0.17.1"
         },
-        "holoviews": {
-            "git": "git://github.com/pyviz/holoviews.git",
-            "ref": "343f28d403f1c484cb9d41f3d54e0ee5a0649dce"
+        "holoviews-foobarbecue": {
+            "git": "https://github.com/foobarbecue/holoviews",
+            "ref": "c01eae1d40b301284e2c10ac0fbd2841495dd440"
         },
         "idna": {
             "hashes": [

@@ -6,7 +6,6 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-holoviews = {git = "git://github.com/pyviz/holoviews.git"}
 bokeh = "*"
 pandas = "*"
 obspy = "*"
@@ -15,6 +14,7 @@ jinja2 = "*"
 tornado = "*"
 ipython = "*"
 panel = "*"
+holoviews-foobarbecue = {git = "https://github.com/foobarbecue/holoviews",ref = "apply_xy_ranges"}
 
 [requires]
 python_version = "3.7"
