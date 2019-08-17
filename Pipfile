@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+holoviews = {git = "git://github.com/pyviz/holoviews.git"}
+bokeh = "*"
+pandas = "*"
+obspy = "*"
+pytz = "*"
+jinja2 = "*"
+tornado = "*"
+ipython = "*"
+panel = "*"
+
+[requires]
+python_version = "3.7"
