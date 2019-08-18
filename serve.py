@@ -63,10 +63,10 @@ function onload(){
 </script>
 {{ plot_script }}
 <body>
-<h1>Live seismic display concept by Aaron Curtis</h1>
-<a href=https://aaroncurt.is>https://aaroncurt.is</a>
+<h1>Live seismic display concept</h1>
+By <a href=https://aaroncurt.is>Aaron Curtis</a>
 <br/>
-<a href=https://github.com/foobarbecue/ultrahelicorder>source code</a>
+<a href=https://github.com/foobarbecue/ultrahelicorder>source code is here</a>
 {{ plot_div }}
 </body> 
 </html>
