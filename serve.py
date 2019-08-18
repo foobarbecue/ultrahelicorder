@@ -75,6 +75,11 @@ function onload(){
 renderer = hv.renderer('bokeh')
 
 
+def plot_seis(data, channel):
+    curve = hv.Curve(data=data[data.channel == channel],
+                     kdims=['timestamp'], vdims='counts')
+    return curve
+
 def make_document(doc):
     blank_data = pd.DataFrame({'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
                                'counts': [np.nan]*4,
@@ -88,10 +93,6 @@ def make_document(doc):
     # blank_data.set_index('timestamp', inplace=True)
     seis_stream = hv.streams.Buffer(blank_data, index=False, length=1000000)
 
-    def plot_seis(data, channel):
-        curve = hv.Curve(data=data[data.channel == channel],
-                         kdims=['timestamp'], vdims='counts')
-        return curve
     # Triggers https://github.com/ioam/holoviews/issues/2705
     seis_dmap = hv.DynamicMap(plot_seis, streams=[seis_stream], kdims=[hv.Dimension('channel',
                                     values=['HV.ALEP..EHE',
