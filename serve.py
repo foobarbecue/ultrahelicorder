@@ -73,7 +73,7 @@ renderer = hv.renderer('bokeh')
 
 def make_document(doc):
     blank_data = pd.DataFrame({'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
-                               'counts': [0.0]*4,
+                               'counts': [np.nan]*4,
                                'channel': ['HV.ALEP..EHE',
                                            'HV.ALEP..EHN',
                                            'HV.AHUD..EHE',
@@ -97,7 +97,7 @@ def make_document(doc):
     seis_dmap = seis_dmap.options({'Curve': {'apply_xrange': False, 'apply_yrange': True,
                                              'width': 1200, 'shared_axes':False}})
     # layout = seis_dmap
-    layout = seis_dmap.layout(['channel']).options().cols(1)
+    layout = seis_dmap.layout(['channel']).cols(1)
     doc.seis_stream = seis_stream
     # Add this user to the list of sessions to generate new data callbacks in slurp.py
     slurp.session_list.append(doc)
