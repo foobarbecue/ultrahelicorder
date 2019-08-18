@@ -107,11 +107,11 @@ def make_document(doc):
     return doc
 
 
-server = Server(make_document, port=81, host='0.0.0.0', allow_websocket_origin=["*"])
+server = Server(make_document, port=8121, host='localhost', allow_websocket_origin=["*"])
 server.start()
 
 if __name__ == '__main__':
-    print('Opening Bokeh application on http://localhost:5006/')
+    print('Opening Bokeh application on http://localhost:8121/')
 
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
