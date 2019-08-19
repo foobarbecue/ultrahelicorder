@@ -105,7 +105,6 @@ def make_document(doc):
     layout = seis_dmap.layout(['channel']).cols(1)
     doc.seis_stream = seis_stream
     # Add this user to the list of sessions to generate new data callbacks in slurp.py
-    slurp.session_list.append(doc)
     doc_root = renderer.get_plot(layout).state
     doc.template = template
     doc.add_root(doc_root)
@@ -113,6 +112,7 @@ def make_document(doc):
 
 
 server = Server(make_document, port=8121, host='localhost', allow_websocket_origin=["*"])
+slurp.bokeh_tornado = server._tornado
 server.start()
 
 if __name__ == '__main__':

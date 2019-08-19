@@ -13,6 +13,7 @@ from obspy.clients.seedlink.easyseedlink import create_client
 import xml.etree.ElementTree as ET
 
 session_list = []
+bokeh_tornado = None
 
 @gen.coroutine
 def update(data, doc):
@@ -24,8 +25,8 @@ def handle_trace(trace):
     times = pd.to_datetime(trace.times('timestamp'), origin='unix', unit='s', utc=True)
     data = pd.DataFrame({'timestamp': times, 'counts': trace.data, 'channel': trace.id})
 
-    for doc in session_list:
-        doc.add_next_tick_callback(partial(update, data=data, doc=doc))
+    for session in bokeh_tornado.get_sessions('/'):
+        session.document.add_next_tick_callback(partial(update, data=data, doc=session.document))
     print(trace)
 
 def obspy_worker(network='HV'):
