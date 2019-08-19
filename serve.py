@@ -104,7 +104,6 @@ def make_document(doc):
     # layout = seis_dmap
     layout = seis_dmap.layout(['channel']).cols(1)
     doc.seis_stream = seis_stream
-    # Add this user to the list of sessions to generate new data callbacks in slurp.py
     doc_root = renderer.get_plot(layout).state
     doc.template = template
     doc.add_root(doc_root)

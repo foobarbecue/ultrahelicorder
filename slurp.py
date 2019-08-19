@@ -12,7 +12,6 @@ from functools import partial
 from obspy.clients.seedlink.easyseedlink import create_client
 import xml.etree.ElementTree as ET
 
-session_list = []
 bokeh_tornado = None
 
 @gen.coroutine
@@ -27,7 +26,6 @@ def handle_trace(trace):
 
     for session in bokeh_tornado.get_sessions('/'):
         session.document.add_next_tick_callback(partial(update, data=data, doc=session.document))
-    print(trace)
 
 def obspy_worker(network='HV'):
     client = create_client('rtserve.iris.washington.edu', on_data=handle_trace)
