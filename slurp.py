@@ -1,9 +1,4 @@
-"""
-Run this with: bokeh serve --show hvhv_holoviews.py
-
-It should open a browser window and stream seismic data to a plot.
-
-"""
+#Collects seismic data and sends it to streams attached to bokeh documents that are being served by serve.py
 
 import pandas as pd
 from threading import Thread
@@ -11,11 +6,11 @@ from tornado import gen
 from functools import partial
 from obspy.clients.seedlink.easyseedlink import create_client
 import xml.etree.ElementTree as ET
+import asyncio
 
 bokeh_tornado = None
 
-@gen.coroutine
-def update(data, doc):
+async def update(data, doc):
     doc.seis_stream.send(data)
 
 def handle_trace(trace):

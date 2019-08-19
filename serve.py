@@ -80,6 +80,7 @@ def plot_seis(data, channel):
                      kdims=['timestamp'], vdims='counts')
     return curve
 
+
 def make_document(doc):
     blank_data = pd.DataFrame({'timestamp': [pd.datetime.now(tz=pytz.utc)]*4,
                                'counts': [np.nan]*4,
